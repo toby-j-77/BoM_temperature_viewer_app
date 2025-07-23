@@ -1,0 +1,342 @@
+---
+title: "Web_app_chart_creation"
+format: html
+editor: visual
+---
+
+# Web app chart creation
+
+## Librarying packages
+
+```{r}
+#librarying packages
+
+library("tidyverse")
+library("forecast")
+```
+
+This document will be used to produce some of the charts that will eventually go into the final web app. It will also be used to familiarise ourselves with the BOM's temperature data. We will first start with a single station location.
+
+When downloading station data, we can see that there is the option to download minimum and maximum data. For the purpose of our app, we will make sure that each person downloads the minimum and maximum data for each station.
+
+# Part 1: Loading in and combining data
+
+Here we need to make sure both datasets for minimum and maximum are standardised and bound together based on date
+
+## 1.1 Loading in and checking data
+
+```{r}
+#loading in data
+
+Sydney_min <- read_csv("Input_data/Sydney_observatory_hill_min.csv") |> as_tibble()
+Sydney_max <- read_csv("Input_data/Sydney_observatory_hill_max.csv") |> as_tibble()
+
+#changing column names
+
+names(Sydney_min) <- c("Product_code", "Station_number", "Year", "Month", "Day", "Min_T", "Days_of_accumulation_min_T", "Quality_min_T")
+
+names(Sydney_max) <- c("Product_code", "Station_number", "Year", "Month", "Day", "Max_T", "Days_of_accumulation_max_T", "Quality_max_T")
+
+#correcting data structure
+
+Sydney_min <- Sydney_min %>% 
+  mutate(Quality_min_T = as_factor(Quality_min_T)) %>%
+  mutate(Date = paste(Year, Month, Day, sep = "-")) %>%
+  mutate(Date = as_date(Date)) %>%
+  mutate(Month = as.factor(Month))
+
+Sydney_max <- Sydney_max %>% 
+  mutate(Quality_max_T = as_factor(Quality_max_T)) %>%
+  mutate(Date = paste(Year, Month, Day, sep = "-")) %>%
+  mutate(Date = as_date(Date)) %>%
+  mutate(Month = as.factor(Month))
+
+#checking structure
+
+Sydney_min
+Sydney_max
+```
+
+For both datasets, we can see that there is a station number column. In the app, we will make sure that they match before we do the join.
+
+## 2.2 Binding data
+
+Here, we will combined both dataframes into a single dataframe. This will be done by joining them together by date. We will then calculate a range for daily temperature as that will also be useful.
+
+```{r}
+#binding data
+
+Sydney_temp <- right_join(Sydney_min, Sydney_max, by = "Date", keep = FALSE)
+
+#removing extra columns
+
+Sydney_temp <- Sydney_temp %>%
+  select(-ends_with(".y"))
+
+#removing .x at the end of columns
+
+names(Sydney_temp) <- c("Product_code", "Station_number", "Year", "Month", "Day", "Min_T", "Days_of_accumulation_min_T", "Quality_min_T", "Date", "Max_T", "Days_of_accumulation_max_T","Quality_max_T")
+```
+
+## 2.3 Adding extra columns
+
+Now that the data is in the correct form, we will add a few different columns. This will include daily temperature range (calculated as the difference between the maximum and minimum temperature), and the mean temperature for the minimum and maximum daily temperature. This will allow us to calculate anomalies.
+
+```{r}
+#adding extra columns
+
+Sydney_temp <- Sydney_temp %>%
+  mutate(T_range = Max_T - Min_T) %>%
+  mutate(Mean_min_T = mean(Min_T, na.rm = TRUE)) %>%
+  mutate(Mean_max_T = mean(Max_T, na.rm = TRUE)) %>%
+  mutate(Min_T_anomaly = Min_T - Mean_min_T) %>%
+  mutate(Max_T_anomaly = Max_T - Mean_max_T)
+
+```
+
+# Part 2: Making some basic plots
+
+Now that we have the dataframe complete, we can make some basic plots
+
+## 2.1 Basic timeseries
+
+This will be a simple plot with the minimum and maximum temperature plotted over time.
+
+```{r}
+#basic timeseries
+
+timeseries_plot <- ggplot(
+  Sydney_temp %>%
+    select(Min_T, Max_T, Date) %>%
+    pivot_longer(
+      cols = c(Min_T, Max_T),
+      names_to = "Min_or_max",
+      values_to = "Temp"
+    )
+) +
+  geom_line(aes(x = Date, y = Temp, col = Min_or_max)) +
+  labs(x = "Date", y = "Temperature (\u00b0C)", col = "Min/Max") +
+  theme_bw() +
+  scale_colour_manual(values = c("red", "blue"),
+                      labels = c("Maximum", "Minimum"))
+
+
+# coord_cartesian(xlim = c(as_date("1950-01-01"), as_date("2000-12-31")))
+
+timeseries_plot
+```
+
+## 2.2 Basic timeseries with moving average
+
+Here we will produce a basic timeseries with a moving average
+
+```{r}
+#basic timeseries with moving average
+
+Sydney_temp_MA <- Sydney_temp %>%
+  mutate(Min_T = zoo::na.approx(Min_T)) %>%
+  mutate(Max_T = zoo::na.approx(Max_T)) %>%
+  mutate(MA_min_T = TTR::SMA(Min_T, 365)) %>%
+  mutate(MA_max_T = TTR::SMA(Max_T, 365)) %>%
+  select(Min_T, Max_T, MA_min_T, MA_max_T, Date) %>%
+  pivot_longer(
+    cols = c(Min_T, Max_T, MA_min_T, MA_max_T),
+    names_to = "Min_or_max",
+    values_to = "Temp"
+  )
+#plotting
+
+timeseries_plot_MA <- ggplot(Sydney_temp_MA) +
+  geom_line(aes(
+    x = Date,
+    y = Temp,
+    col = Min_or_max,
+    alpha = Min_or_max
+  )) +
+  labs(x = "Date",
+       y = "Temperature (\u00b0C)",
+       col = "Min/Max",
+       alpha = "Min/Max") +
+  theme_bw() +
+  scale_colour_manual(
+    values = c("red", "blue", "red", "blue"),
+    labels = c(
+      "Running average maximum",
+      "Running average minimum",
+      "Maximum",
+      "Minimum"
+    )
+  ) +
+  scale_alpha_manual(
+    values = c(1, 1, 0.25, 0.25),
+    labels = c(
+      "Running average maximum",
+      "Running average minimum",
+      "Maximum",
+      "Minimum"
+    )
+  )
+
+timeseries_plot_MA
+```
+
+## 2.3 Monthly temperatures
+
+The following section deals with the data being broken into months.
+
+When plotting, we also want to just plot one value for each month, so I will use this old function I made that calculates the date for the middle of the month (with a few adjustments made to it).
+
+### 2.3.1 Creating dataframe
+
+Here we calculate monthly mean for both minimum and maximum temperature, and then the anomaly.
+
+```{r}
+#custom function
+
+month_middle <- function(DATE) {
+  if_else(condition = {
+    (month(DATE) %in% c(1, 3, 5, 7, 8, 10, 12))
+  },
+  true = {
+    Date_middle <- floor_date(DATE, "month") + days(15)
+  },
+  false = {
+    if_else(condition = {
+      (month(DATE) %in% c(4, 6, 9, 11))
+    },
+    true = {
+      Date_middle <- floor_date(DATE, "month") + days(14)
+    },
+    false = {
+      if_else(condition = {
+        ((year(DATE) / 4) %% 1 == 0)
+      },
+      true = {
+        Date_middle <- floor_date(DATE, "month") + days(14)
+      },
+      false = {
+        Date_middle <- floor_date(DATE, "month") + days(13)
+      })
+    })
+  })
+}
+
+#creating data
+
+Sydney_monthly <- Sydney_temp %>%
+  group_by(Month) %>%
+  mutate(Monthly_mean_min_T = mean(Min_T, na.rm = TRUE)) %>%
+  mutate(Monthly_mean_max_T = mean(Max_T, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(Year, Month) %>%
+  mutate(Monthly_anomaly_min_T = mean(Min_T, na.rm = TRUE) - Monthly_mean_min_T) %>%
+  mutate(Monthly_anomaly_max_T = mean(Max_T, na.rm = TRUE) - Monthly_mean_max_T) %>%
+  ungroup() %>%
+  mutate(Month_middle = month_middle(Date))
+```
+
+### 2.3.2 Plotting means
+
+When plotting, I have just removed all the extra rows and made the dataframe shorter to only contain 24 rows in order to speed up the plotting process as using the entire dataframe can be quite slow. Using the mean function in the summarise function shouldn't be an issue since all values of the mean monthly temperature is the same for each month.
+
+```{r}
+#ggplotting
+
+monthly_mean_plot <- ggplot(
+  Sydney_monthly %>%
+    group_by(Month, Monthly_mean_min_T, Monthly_mean_max_T) %>%
+    summarise(
+      Monthly_mean_min_T = mean(Monthly_mean_min_T),
+      Monthly_mean_max_T = mean(Monthly_mean_max_T)
+    ) %>%
+    pivot_longer(
+      cols = c(Monthly_mean_min_T, Monthly_mean_max_T),
+      names_to = "Min_or_max",
+      values_to = "Monthly_mean_T"
+    )
+) +
+  geom_col(
+    aes(x = Month, y = Monthly_mean_T, fill = Min_or_max),
+    col = "black",
+    position = "dodge"
+  ) +
+  labs(x = "Month", y = "Mean Temperature (\u00b0C)", fill = "Min/Max") +
+  theme_bw() +
+  scale_fill_manual(values = c("red", "blue"),
+                    labels = c("Maximum", "Minimum"))
+
+
+monthly_mean_plot
+```
+
+### 2.3.3 Plotting anomalies
+
+```{r}
+#ggplotting
+
+monthly_anomalies <- ggplot(
+  Sydney_monthly %>%
+    distinct(Month_middle, Monthly_anomaly_min_T, Monthly_anomaly_max_T) %>%
+    pivot_longer(
+      cols = c(Monthly_anomaly_min_T, Monthly_anomaly_max_T),
+      names_to = "Min_or_max",
+      values_to = "Monthly_anomaly"
+    )
+) +
+  geom_line(aes(x = Month_middle, y = Monthly_anomaly, col = Min_or_max),
+            linewidth = 0.75) +
+  labs(x = "Date", y = "Monthly temperature anomaly (\u00b0C)", col = "Min/Max") +
+  theme_bw() +
+  scale_colour_manual(values = c("red", "blue"),
+                      labels = c("Maximum", "Minimum")) +
+  coord_cartesian(xlim = c(as_date("1950-01-01"), as_date("2000-12-31")))
+
+monthly_anomalies
+```
+
+### 2.3.4 Creating a matrix of plots of monthly anomalies
+
+We will use the facet wrap function here
+
+```{r}
+#ggplotting
+
+monthly_anomalies_plot_matrix <- ggplot(
+  Sydney_monthly %>%
+    distinct(Monthly_anomaly_min_T, Monthly_anomaly_max_T, Year, Month) %>%
+    pivot_longer(
+      cols = c(Monthly_anomaly_min_T, Monthly_anomaly_max_T),
+      names_to = "Min_or_max",
+      values_to = "Monthly_anomaly"
+    )
+) +
+  geom_line(aes(x = Year, y = Monthly_anomaly, col = Min_or_max),
+            linewidth = 0.75) +
+  labs(x = "Date", y = "Monthly temperature anomaly (\u00b0C)", col = "Min/Max") +
+  theme_bw() +
+  geom_smooth(aes(x = Year, y = Monthly_anomaly, col = Min_or_max)) +
+  scale_colour_manual(values = c("red", "blue"),
+                      labels = c("Maximum", "Minimum")) +
+  facet_wrap( ~ Month)
+
+monthly_anomalies_plot_matrix
+
+# #testing stuff
+# 
+# test_df <- Sydney_monthly %>%
+#     distinct(Month_middle, Monthly_anomaly_min_T, Monthly_anomaly_max_T)
+```
+
+## 2.? Timeseries of temperature range
+
+```{r}
+#timeseries of temperature range
+
+temperature_range_plot <- ggplot(Sydney_temp) +
+  geom_line(aes(x = Date, y = T_range)) +
+  labs(x = "Date",
+       y = "Temperature range (\u00b0C)") +
+  theme_bw()
+
+temperature_range_plot
+```

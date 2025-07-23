@@ -1,0 +1,483 @@
+---
+title: "split_fill_function"
+format: html
+editor: visual
+---
+
+## Librarying packages
+
+```{r}
+#librarying packages
+
+
+library("tidyverse")
+library("forecast")
+library("rlist")
+```
+
+This document will be used to create the split_fill() function, which takes 3 inputs:
+
+-   data: the data that will be operated on. Must be a single column that contains NAs within its structure.
+
+-   max_gap: the maximum gap between consecutive NAs to split the data
+
+-   RA: the number of data points to base the running average on.
+
+## Creating data for operation
+
+I am going to load in some data that this function can be used on:
+
+```{r}
+#test_data
+
+test_data <- read_csv("Input_data/test_data.csv") |> as_tibble()
+
+test_data |> print(n = 48)
+```
+
+The goal of this function is to split the column test_2 up into several chunks based on NA spaces, and compute the running average for each chunk.
+
+## Splitting chunks
+
+Here we are going to allow the maximum NA space to be 5, if a section has a gap of more than 5 NAs, then it will be split off into a different chunk.
+
+```{r}
+#splitting chunks (#used AI for help)
+
+nas <- test_data %>% select(test_2)
+
+na_indices <- which(is.na(nas))
+
+
+na_indices
+
+na_consecutive <- vector(mode = "list", length = 0)
+
+for (i in 2:length(na_indices)) {
+  #checking consecutive indices
+  if (na_indices[[i]] - na_indices[[i - 1]] == 1) {
+    # #check first index
+    # if (i == 2 & na_indices[[2]] - na_indices[[1]] == 1) {
+    #   na_consecutive <- list.append(na_consecutive, na_indices[[1]])
+    # }
+    #append numbers
+    na_consecutive <- list.append(na_consecutive, na_indices[[i-1]])
+    na_consecutive <- list.append(na_consecutive, na_indices[[i]])
+  }
+}
+
+#remove duplicates
+
+na_consecutive <- unique(na_consecutive)
+
+na_consecutive
+```
+
+## Determining the start and end of each chunk
+
+Now that we have only the consecutive indices, we want to group them based on if the consecutive indices are greater than a certain number n. We will let n be 5 for this example.
+
+```{r}
+# #my code
+# 
+# #create empty variables
+# 
+# na_ends_list <- vector(mode = "list", length = 0)
+# 
+# segment_length <- 1
+# 
+# segment_indices <- vector(mode = "list", length = 0)
+# 
+# 
+# for (j in 1:(length(na_consecutive) - 1)) {
+#   #counting consecutive segments length
+#   
+#   if (na_consecutive[[j + 1]] - na_consecutive[[j]] == 1) {
+#     #increase count
+#     segment_length <- segment_length + 1
+#     
+#     #append both j + 1 and j to account for the last element in a sequence
+#     segment_indices <- list.append(segment_indices, na_consecutive[[j]])
+#     segment_indices <- list.append(segment_indices, na_consecutive[[j + 1]])
+#   }
+#   
+#   else{
+#     
+#     #deciding to append lists
+#     
+#     if (segment_length >= 5) {
+#       #adding first and last value of segmment_indices into na_ends_list
+#       na_ends_list <- list.append(na_ends_list, c(
+#         segment_indices[[1]], 
+#         segment_indices[[length(segment_indices)]]))
+# 
+#       
+#       #resetting variables
+#       
+#       segment_length <- 1
+#       segment_indices <- vector(mode = "list", length = 0)
+#     }
+#     
+#     else{
+#       #reset variables
+#       
+#       segment_length <- 1
+#       segment_indices <- vector(mode = "list", length = 0)
+#     }
+#   }
+#   
+#   #checking the last segment
+#   
+#   if (segment_length >= 5) {
+#     #adding first and last value of segmment indices into na_ends
+#       na_ends_list <- list.append(na_ends_list, c(
+#         segment_indices[[1]], 
+#         segment_indices[[length(segment_indices)]]))
+#     
+#     segment_length <- 1
+#     segment_indices <- vector(mode = "list", length = 0)
+#   }
+# }
+# 
+# na_ends_list
+
+#code amended by AI
+
+# Initialization
+na_ends_list <- list()
+segment_indices <- list()
+segment_length <- 1
+
+for (j in 2:length(na_consecutive)) {
+  if (na_consecutive[[j]] - na_consecutive[[j - 1]] == 1) {
+    segment_length <- segment_length + 1
+    segment_indices <- append(segment_indices, na_consecutive[j - 1])
+    
+    # Add j if it's the last value
+    if (j == length(na_consecutive)) {
+      segment_indices <- append(segment_indices, na_consecutive[j])
+      if (segment_length >= 5) {
+        na_ends_list <- append(na_ends_list, list(c(
+          segment_indices[[1]], segment_indices[[length(segment_indices)]]
+        )))
+      }
+    }
+    
+  } else {
+    # Check previous segment
+    segment_indices <- append(segment_indices, na_consecutive[j - 1])
+    if (segment_length >= 5) {
+      na_ends_list <- append(na_ends_list, list(c(
+        segment_indices[[1]], segment_indices[[length(segment_indices)]]
+      )))
+    }
+    
+    # Reset
+    segment_length <- 1
+    segment_indices <- list()
+  }
+}
+
+na_ends_list
+```
+
+## Converting start and end indices for NA into start and end indices for non-NA segments
+
+For the start and end of non-NA segments, we have to subtract 1 from the start index for the NA segment, and add 1 to the end index for the NA segment
+
+```{r}
+#looping
+
+for (k in 1:length(na_ends_list)){
+  
+  #subtracting one from the start index
+  
+  na_ends_list[[k]][1] <- na_ends_list[[k]][[1]] - 1
+  
+  #adding one to the end index
+  
+  na_ends_list[[k]][2] <- na_ends_list[[k]][[2]] + 1
+}
+
+na_ends_list
+```
+
+Now we need to create another list where each pair is the start and end index of a chunk of data. For this, we are going to assume that the data has been cleaned to remove leading and ending NAs.
+
+```{r}
+#creating an empty list
+
+data_indices_raw <- vector(mode = "list", length = 0)
+
+#adding values
+
+#adding first value
+
+data_indices_raw <- list.append(data_indices_raw, c(1, na_ends_list[[1]][1]))
+
+#adding subsequent values
+
+#creating a counter
+
+# l = 2
+
+#for looping
+
+for(l in 2:length(na_ends_list)){
+  #creating pair of values
+  
+  data_ends <- c(na_ends_list[[l - 1]][2],na_ends_list[[l]][1])
+  #appending value
+  data_indices_raw <- list.append(data_indices_raw, data_ends)
+}
+
+#adding the last chunk
+
+l = length(na_ends_list)
+
+data_indices_raw <- list.append(data_indices_raw, c(na_ends_list[[l]][2],
+                                            nrow(test_data)))
+
+data_indices_raw
+
+#checking length of each chunk
+
+data_indices <- vector(mode = "list", length = 0)
+
+for(m in 1:length(data_indices_raw)){
+  index_chunk <- data_indices_raw[[m]]
+  if(index_chunk[2] - index_chunk[1] > 3){
+    data_indices <- list.append(data_indices, index_chunk)
+  }
+}
+
+data_indices
+
+```
+
+Now we have the data split into manageable chunks, we can see that some sections are particularly short. If the data section is too short, we cannot perform a running average on them. This means we have to remove the chunks that are too short. This should only be an issue for the last column
+
+## Performing running average
+
+To do this, we are going to use a loop to individually remove a section from the original data, process it, and then add it back in. For the running average, we will use 3 points
+
+```{r}
+#looping
+
+#creating a list of chunks
+
+data_chunks <- vector(mode = "list", length = 0)
+
+for (n in 1:length(data_indices)) {
+  #saving each chunk into data_chunks
+  
+  data_chunks <- list.append(data_chunks,
+                             test_data %>% slice(
+                               data_indices[[n]][1]: 
+                               data_indices[[n]][2]))
+}
+
+data_chunks
+
+#create an empty column for test_data
+
+test_data <- test_data %>%
+  mutate(RA = NA)
+
+#calculating running average for each chunk and adding back to original dataset
+
+for(n in 1:length(data_chunks)){
+  #fill in NAs
+  data_chunks[[n]] <- data_chunks[[n]] %>%
+    mutate(test_2 = zoo::na.approx(test_2)) %>%
+    mutate(RA = TTR::SMA(test_2, 3))
+}
+
+data_chunks
+
+#adding data back (AI generated and then I edited the code)
+
+for (n in 1:length(data_chunks)) {
+  # Extract the row indices for the current chunk
+  chunk_start <- data_indices[[n]][1]
+  chunk_end <- data_indices[[n]][2]
+
+  # Replace the RA column and test_2 column
+  test_data[chunk_start:chunk_end, "RA"] <- data_chunks[[n]]$RA
+  test_data[chunk_start:chunk_end, "test_2"] <- data_chunks[[n]]$test_2
+}
+
+test_data
+```
+
+For the running average to work, the length of each chunk must be longer than the length defined by the length of the running average - 1.
+
+The function is now done. now we need to generalise it. There should be 5 inputs: the dataset, the column in which the RA is to be performed on, the name of the new column, the length of NA to be omitted, and the RA length.
+
+## Defining final function
+
+```{r}
+split_fill <- function(df, column, new_column, NA_length, RA_length) {
+  #finding consecutive NA indices
+  
+  nas <- df %>% select(column)
+  
+  na_indices <- which(is.na(nas))
+  
+  na_consecutive <- vector(mode = "list", length = 0)
+  
+  for (i in 2:length(na_indices)) {
+    #checking consecutive indices
+    if (na_indices[[i]] - na_indices[[i - 1]] == 1) {
+      #append numbers
+      na_consecutive <- list.append(na_consecutive, na_indices[[i - 1]])
+      na_consecutive <- list.append(na_consecutive, na_indices[[i]])
+    }
+  }
+  
+  #remove duplicates
+  
+  na_consecutive <- unique(na_consecutive)
+  
+  #creating na chunk pairs
+  
+  #code amended by AI
+  
+  # Initialization
+  na_ends_list <- list()
+  segment_indices <- list()
+  segment_length <- 1
+  
+  for (j in 2:length(na_consecutive)) {
+    if (na_consecutive[[j]] - na_consecutive[[j - 1]] == 1) {
+      segment_length <- segment_length + 1
+      segment_indices <- append(segment_indices, na_consecutive[j - 1])
+      
+      # Add j if it's the last value
+      if (j == length(na_consecutive)) {
+        segment_indices <- append(segment_indices, na_consecutive[j])
+        if (segment_length >= NA_length) {
+          na_ends_list <- append(na_ends_list, list(c(
+            segment_indices[[1]], segment_indices[[length(segment_indices)]]
+          )))
+        }
+      }
+      
+    } else {
+      # Check previous segment
+      segment_indices <- append(segment_indices, na_consecutive[j - 1])
+      if (segment_length >= NA_length) {
+        na_ends_list <- append(na_ends_list, list(c(
+          segment_indices[[1]], segment_indices[[length(segment_indices)]]
+        )))
+      }
+      
+      # Reset
+      segment_length <- 1
+      segment_indices <- list()
+    }
+  }
+  
+  #convert NA indices to data indices
+  
+  for (k in 1:length(na_ends_list)) {
+    #subtracting one from the start index
+    
+    na_ends_list[[k]][1] <- na_ends_list[[k]][[1]] - 1
+    
+    #adding one to the end index
+    
+    na_ends_list[[k]][2] <- na_ends_list[[k]][[2]] + 1
+  }
+  
+  data_indices_raw <- vector(mode = "list", length = 0)
+  
+  #adding values
+  
+  #adding first value
+  
+  data_indices_raw <- list.append(data_indices_raw, c(1, na_ends_list[[1]][1]))
+  
+  #adding subsequent values
+  
+  #for looping
+  
+  for (l in 2:length(na_ends_list)) {
+    #creating pair of values
+    
+    data_ends <- c(na_ends_list[[l - 1]][2], na_ends_list[[l]][1])
+    #appending value
+    data_indices_raw <- list.append(data_indices_raw, data_ends)
+  }
+  
+  #adding the last chunk
+  
+  l = length(na_ends_list)
+  
+  data_indices_raw <- list.append(data_indices_raw, c(na_ends_list[[l]][2], nrow(df)))
+  
+  
+  #checking length of each chunk
+  
+  data_indices <- vector(mode = "list", length = 0)
+  
+  for (m in 1:length(data_indices_raw)) {
+    index_chunk <- data_indices_raw[[m]]
+    if (index_chunk[2] - index_chunk[1] > RA_length - 2) {
+      data_indices <- list.append(data_indices, index_chunk)
+    }
+  }
+  
+  #performing RA
+  
+  #looping
+  
+  #creating a list of chunks
+  
+  data_chunks <- vector(mode = "list", length = 0)
+  
+  for (n in 1:length(data_indices)) {
+    #saving each chunk into data_chunks
+    
+    data_chunks <- list.append(data_chunks,
+                               df %>% slice(data_indices[[n]][1]:data_indices[[n]][2]))
+  }
+  
+  #create an empty column for df
+  
+  df <- df %>%
+    mutate(RA = NA)
+  
+  #calculating running average for each chunk and adding back to original dataset
+  
+  for (n in 1:length(data_chunks)) {
+    #fill in NAs
+    data_chunks[[n]] <- data_chunks[[n]] %>%
+      mutate(column = zoo::na.approx(column)) %>%
+      mutate(new_columm = TTR::SMA(column, 3))
+  }
+  
+  
+  #adding data back (AI generated and then I edited the code)
+  
+  for (n in 1:length(data_chunks)) {
+    # Extract the row indices for the current chunk
+    chunk_start <- data_indices[[n]][1]
+    chunk_end <- data_indices[[n]][2]
+    
+    # Replace the RA column and column column
+    df[chunk_start:chunk_end, deparse(substitute(new_column))] <- data_chunks[[n]]$new_column
+    df[chunk_start:chunk_end, deparse(substitute(column))] <- data_chunks[[n]]$column
+  }
+  
+  
+}
+```
+
+Testing
+
+```{r}
+#testing 
+
+test_df <- split_fill(test_data, "test_2", RA_4, 5, 3)
+```
