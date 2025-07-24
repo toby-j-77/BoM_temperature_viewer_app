@@ -114,7 +114,8 @@ timeseries_plot <- ggplot(
       values_to = "Temp"
     )
 ) +
-  geom_line(aes(x = Date, y = Temp, col = Min_or_max)) +
+  geom_line(aes(x = Date, y = Temp, col = Min_or_max),
+            alpha = 1) +
   labs(x = "Date", y = "Temperature (\u00b0C)", col = "Min/Max") +
   theme_bw() +
   scale_colour_manual(values = c("red", "blue"),
@@ -314,7 +315,6 @@ monthly_anomalies_plot_matrix <- ggplot(
             linewidth = 0.75) +
   labs(x = "Date", y = "Monthly temperature anomaly (\u00b0C)", col = "Min/Max") +
   theme_bw() +
-  geom_smooth(aes(x = Year, y = Monthly_anomaly, col = Min_or_max)) +
   scale_colour_manual(values = c("red", "blue"),
                       labels = c("Maximum", "Minimum")) +
   facet_wrap( ~ Month)
@@ -325,6 +325,21 @@ monthly_anomalies_plot_matrix
 # 
 # test_df <- Sydney_monthly %>%
 #     distinct(Month_middle, Monthly_anomaly_min_T, Monthly_anomaly_max_T)
+```
+
+## Part 3: Adding trends to existing charts
+
+If we can add trendlines to existing charts, it will be easier than to recreating them from scratch. We will be adding linear trendlines only.
+
+### 3.1 Basic timeline + trendline
+
+```{r}
+#adding trendline
+
+timeseries_plot +
+  geom_smooth(aes(x = Date, y = Temp, col = Min_or_max),
+              method = 'lm') +
+  scale_alpha_manual(values = c(0.5,0.5))
 ```
 
 ## 2.? Timeseries of temperature range

@@ -18,7 +18,7 @@ UI <- fluidPage(
   
   theme = bs_theme(version = 5, bootswatch = "cerulean"),
   
-  titlePanel("BoM Temperature data viewer"),
+  titlePanel("BoM Temperature Data Viewer"),
   
   fileInput(
     inputId = "BoM_min",
@@ -34,7 +34,7 @@ UI <- fluidPage(
   
   selectInput(
     inputId = "RA_input",
-    label = "Running average? (For Complete Timeseries)",
+    label = "Running Average? (For Complete Timeseries)",
     choices = list("None" = "None", 
                    "7 days" = 7, 
                    "31 days" = 31, 
@@ -734,10 +734,7 @@ server <- function(input, output, session) {
     
     #creating zip folder
     
-    filename = paste0(
-      "Station_",
-      (datasets()$data_joined)$Station_number[[1]],
-      "_plots.zip"), 
+    filename = "plots.zip", 
     
     content = function(file){
 
@@ -750,39 +747,39 @@ server <- function(input, output, session) {
         plot = timeseries()$timeseries_plot,
         device = "png",
         width = 15,
-        height = 10,
+        height = 5,
         dpi = 400
       )
       
       #Monthly_barchart
-      
+
       ggsave(
         file.path(tempdir(),"Mean_Monthly_Temperature.png"),
         plot = monthly_data()$monthly_mean_plot,
         device = "png",
-        width = 10,
-        height = 10,
+        width = 5,
+        height = 5,
         dpi = 400
       )
-      
+
       #Monthly_anomalies
-      
+
       ggsave(
         file.path(tempdir(),"Monthly_Anomalies.png"),
         plot = monthly_data()$monthly_anomaly_plot,
         device = "png",
         width = 15,
-        height = 10,
+        height = 5,
         dpi = 400
       )
-      
+
       #Monthly_anomalies_facet
-      
+
       ggsave(
-        file.path(tempdir(),"Station_Monthly_Anomalies_Facet.png"),
+        file.path(tempdir(), "Monthly_Anomalies_Facet.png"),
         plot = monthly_data()$monthly_anomaly_facet,
         device = "png",
-        width = 10,
+        width = 15,
         height = 10,
         dpi = 400
       )
