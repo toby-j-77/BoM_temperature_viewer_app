@@ -94,6 +94,39 @@ Sydney_temp <- Sydney_temp %>%
 
 ```
 
+## 2.4 Basic data summaries
+
+Here we want the start and end date of the data, how many days the data contains, and how many actual data points are contained.
+
+```{r}
+#creating information table
+information_table <- data.frame(
+  station_number = Sydney_temp$Station_number[[1]],
+  start_date = Sydney_temp$Date[[1]],
+  end_date = Sydney_temp$Date[[nrow(Sydney_temp)]],
+  no_of_days = as.integer(Sydney_temp$Date[[nrow(Sydney_temp)]] - Sydney_temp$Date[[1]]),
+  days_with_data = nrow(Sydney_temp |> drop_na(Min_T))
+)
+
+
+
+
+
+names(information_table) <- c(
+  "Station_number",
+  "Start_date",
+  "End_date",
+  "No_of_days",
+  "Days_with_data",
+  "Data_percent"
+)
+
+information_table <- information_table |>
+  mutate(data_percent = round(100*(days_with_data/no_of_days), digits = 2))
+
+information_table
+```
+
 # Part 2: Making some basic plots
 
 Now that we have the dataframe complete, we can make some basic plots

@@ -215,22 +215,29 @@ server <- function(input, output, session) {
         data_joined <- data_joined %>%
           mutate(T_range = Max_T - Min_T)
         
-        #basic summaries
+        #creating information table
         
         information_table <- data.frame(
           station_number = data_joined$Station_number[[1]],
           start_date = data_joined$Date[[1]],
-          end_date = data_joined$Date[[nrow(data_joined)]])
-        
-        names(information_table) <- c(
-          "Station_number",
-          "Start_date",
-          "End_date"
+          end_date = data_joined$Date[[nrow(data_joined)]],
+          no_of_days = as.integer(data_joined$Date[[nrow(data_joined)]] - data_joined$Date[[1]]),
+          days_with_data = nrow(data_joined |> drop_na(Min_T))
         )
         
-        information_table <- information_table %>%
-          mutate(Start_date = as.character(Start_date)) %>%
-          mutate(End_date = as.character(End_date))
+        information_table <- information_table |>
+          mutate(data_percent = round(100*(days_with_data/no_of_days), digits = 2)) %>%
+          mutate(start_date = as.character(start_date)) %>%
+          mutate(end_date = as.character(end_date))
+        
+        names(information_table) <- c(
+          "Station Number",
+          "Start Date",
+          "End Date",
+          "Number of Days",
+          "Days With Data",
+          "Percent of Days with Data"
+        )
 
         #returning items
         
