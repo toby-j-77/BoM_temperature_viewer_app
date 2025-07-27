@@ -50,6 +50,15 @@ UI <- fluidPage(
     )
   ),
   
+  radioButtons(
+    inputId = "trend",
+    label = "Display Linear Trendline?",
+    choices = list(
+      "No" = 0,
+      "Yes" = 1
+    )
+  ),
+  
   downloadButton(
     outputId = "DOWNLOADS",
     label= "Download Plots"),
@@ -213,7 +222,8 @@ server <- function(input, output, session) {
         #calculating temperature range
         
         data_joined <- data_joined %>%
-          mutate(T_range = Max_T - Min_T)
+          mutate(T_range = Max_T - Min_T) %>%
+          mutate(T_range_label = "Temperature_range")
         
         #creating information table
         
@@ -260,11 +270,17 @@ server <- function(input, output, session) {
     
     req(input$RA_input)
     
+    req(input$trend)
+    
+    #inputs
+    
     data_joined <- datasets()$data_joined
     
     RA_selection <- input$RA_input
     
     graph_type <- input$graph_type
+    
+    trend <- input$trend
     
     #if no runnning average is selected
     
@@ -281,23 +297,47 @@ server <- function(input, output, session) {
             values_to = "Temp"
           )
       ) +
-        geom_line(aes(x = Date, y = Temp, col = Min_or_max)) +
+        geom_line(aes(x = Date, y = Temp, col = Min_or_max, alpha = Min_or_max)) +
         labs(x = "Date", y = "Temperature (\u00b0C)", col = "Min/Max") +
         ggtitle(paste0("Minimum and Maximum Temperature Timeseries for Station ", 
                        (datasets()$data_joined)$Station_number[[1]])) +
         theme_bw() +
         scale_colour_manual(values = c("red", "blue"),
-                            labels = c("Maximum", "Minimum"))
+                            labels = c("Maximum", "Minimum")) +
+        scale_alpha_manual(values = c(1, 1),
+                           labels = c("Maximum", "Minimum"))
       
       #creating temperature range plot with no running average
       
       plot_1B <- ggplot(data_joined) +
-        geom_line(aes(x = Date, y = T_range),
-                  col = 'black') +
-        labs(x = "Date", y = "Temperature Range (\u00b0C)", col = "Min/Max") +
+        geom_line(aes(x = Date, y = T_range, col = T_range_label, alpha = T_range_label)) +
+        labs(x = "Date", y = "Temperature Range (\u00b0C)", col = "Temperature_range", alpha = "Temperature_range") +
         ggtitle(paste0("Temperature Range Timeseries for Station ", 
                        (datasets()$data_joined)$Station_number[[1]])) +
-        theme_bw()
+        theme_bw() +
+        scale_color_manual(values = c('black')) +
+        scale_alpha_manual(values = c(1))
+      
+      if (trend == 1){
+        
+        #adding trendlines
+        
+        plot_1A <- plot_1A +
+          geom_smooth(aes(x = Date, y = Temp, col = Min_or_max),
+                      method = 'lm',
+                      linetype = 3,
+                      linewidth = 2.5) +
+          scale_alpha_manual(values = c(0.25, 0.25))
+        
+        plot_1B <- plot_1B +
+          geom_smooth(aes(x = Date, y = T_range),
+                      col = 'black',
+                      method = 'lm',
+                      linetype = 3,
+                      linewidth = 2.5,
+                      alpha = 1) +
+          scale_alpha_manual(values = c(0.25))
+      }
       
       #returning plots
       
@@ -441,15 +481,21 @@ server <- function(input, output, session) {
   
   monthly_data <- reactive({
     
-    #this ensures datasets are processed correctly
+    #required inputs
     
     req(datasets()$input_check == 1)
     
     req(input$RA_input)
     
+    req(input$trend)
+    
+    #getting values
+    
     data_joined <- datasets()$data_joined
     
     graph_type <- input$graph_type
+    
+    trend <- input$trend
     
     #calculating monthly means and monthly mean anomalies
     
@@ -497,7 +543,7 @@ server <- function(input, output, session) {
       labs(x = "Month", y = "Mean Temperature (\u00b0C)", fill = "Min/Max") +
       theme_bw() +
       scale_fill_manual(values = c("red", "blue"),
-                        labels = c("Maximum", "Minimum"))
+                        labels = c("Maximum", "Minimum")) 
     
     ##monthly mean temperature ranges
     
@@ -528,39 +574,51 @@ server <- function(input, output, session) {
           cols = c(Monthly_anomaly_min_T, Monthly_anomaly_max_T),
           names_to = "Min_or_max",
           values_to = "Monthly_anomaly"
-        )
+        ) 
     ) +
-      geom_line(aes(x = Month_middle, y = Monthly_anomaly, col = Min_or_max),
+      geom_line(aes(x = Month_middle, y = Monthly_anomaly, col = Min_or_max, alpha = Min_or_max),
                 linewidth = 0.75) +
       ggtitle(paste0(
         "Monthly Temperature Anomalies For Station ",
         (datasets()$data_joined)$Station_number[[1]])) +
       labs(x = "Date", 
            y = "Monthly temperature anomaly (\u00b0C)", 
-           col = "Min/Max") +
+           col = "Min/Max",
+           alpha = "Min/Max") +
       theme_bw() +
       geom_hline(yintercept = 0,
-                 col = "black") +
+                 col = "black",
+                 alpha = 1) +
       scale_colour_manual(values = c("red", "blue"),
+                          labels = c("Maximum", "Minimum")) +
+      scale_alpha_manual(values = c(1, 1),
                           labels = c("Maximum", "Minimum"))
     
     ##monthly temperature range anomalies
     
     plot_3B <- ggplot(
       monthly_data %>%
-        distinct(Month_middle, Monthly_anomaly_T_range)
+        distinct(Month_middle, Monthly_anomaly_T_range) %>%
+        mutate(T_range_label = "Temperature")
     ) +
-      geom_line(aes(x = Month_middle, y = Monthly_anomaly_T_range),
+      geom_line(aes(x = Month_middle, y = Monthly_anomaly_T_range, col = T_range_label, alpha = T_range_label),
                 col = "black",
                 linewidth = 0.75) +
       ggtitle(paste0(
         "Monthly Temperature Range Anomalies For Station ",
         (datasets()$data_joined)$Station_number[[1]])) +
       labs(x = "Date", 
-           y = "Monthly Temperature Range Anomaly (\u00b0C)") +
+           y = "Monthly Temperature Range Anomaly (\u00b0C)",
+           col = "Monthly Temperature Range Anomaly",
+           alpha = "Monthly Temperature Range Anomaly") +
       theme_bw() +
       geom_hline(yintercept = 0,
-                 col = "black")
+                 col = "black",
+                 alpha = 1) +
+      scale_colour_manual(values = c("black"),
+                          labels = c("Monthly Temperature Range Anomaly")) +
+      scale_alpha_manual(values = c(1),
+                          labels = c("Monthly Temperature Range Anomaly"))
     
     ##monthly min max temperature anomaly matrix
     
@@ -573,7 +631,7 @@ server <- function(input, output, session) {
           values_to = "Monthly_anomaly"
         )
     ) +
-      geom_line(aes(x = Year, y = Monthly_anomaly, col = Min_or_max),
+      geom_line(aes(x = Year, y = Monthly_anomaly, col = Min_or_max, alpha = Min_or_max),
                 linewidth = 0.75) +
       ggtitle(paste0(
         "Monthly Temperature Anomalies For Station ",
@@ -581,22 +639,25 @@ server <- function(input, output, session) {
         " for Each Month")) +
       labs(x = "Date", 
            y = "Monthly Temperature Range Anomaly (\u00b0C)", 
-           col = "Min/Max") +
+           col = "Min/Max",
+           alpha = "Min/Max") +
       theme_bw() +
       geom_hline(yintercept = 0,
                  col = "black") +
       scale_colour_manual(values = c("red", "blue"),
                           labels = c("Maximum", "Minimum")) +
+      scale_alpha_manual(values = c(1, 1),
+                         labels = c("Maximum", "Minimum")) +
       facet_wrap( ~ Month)
     
     ##monthly temperature range anomaly matrix
     
     plot_4B <- ggplot(
       monthly_data %>%
-        distinct(Monthly_anomaly_T_range, Year, Month)
+        distinct(Monthly_anomaly_T_range, Year, Month )%>%
+        mutate(T_range_label = "Temperature")
     ) +
-      geom_line(aes(x = Year, y = Monthly_anomaly_T_range),
-                col = "black",
+      geom_line(aes(x = Year, y = Monthly_anomaly_T_range, col = T_range_label, alpha = T_range_label),
                 linewidth = 0.75) +
       ggtitle(paste0(
         "Monthly Temperature Range Anomalies For Station ",
@@ -604,11 +665,62 @@ server <- function(input, output, session) {
         " for Each Month")) +
       labs(x = "Date", 
            y = "Monthly Temperature Range Anomaly (\u00b0C)", 
+           col = "Monthly Temperature Range Anomaly",
+           alpha = "Monthly Temperature Range Anomaly"
            ) +
       theme_bw() +
       geom_hline(yintercept = 0,
                  col = "black") +
+      scale_colour_manual(values = c('black'),
+                          labels = c("Monthly Temperature Range Anomaly")) +
+      scale_alpha_manual(values = c(1),
+                         labels = c("Monthly Temperature Range Anomaly")) +
       facet_wrap( ~ Month)
+    
+    ##adding trends
+    
+    if(trend == 1){
+      
+      plot_3A <- plot_3A +
+        geom_smooth(aes(x = Month_middle, y = Monthly_anomaly, col = Min_or_max),
+                    method = 'lm',
+                    alpha = 1,
+                    linetype = 3,
+                    linewidth = 2.5) +
+        scale_alpha_manual(values = c(0.25, 0.25),
+                           labels = c("Maximum", "Minimum"))
+      
+      plot_3B <- plot_3B +
+        geom_smooth(aes(x = Month_middle, y = Monthly_anomaly_T_range),
+                    col = 'black',
+                    method = 'lm',
+                    linetype = 3,
+                    linewidth = 2.5,
+                    alpha = 1) +
+        scale_alpha_manual(values = c(0.25),
+                           labels = c("Monthly Temperature Range Anomaly"))
+      
+      plot_4A <- plot_4A +
+        geom_smooth(aes(x = Year, y = Monthly_anomaly, col = Min_or_max),
+                    method = 'lm',
+                    alpha = 1,
+                    linetype = 3,
+                    linewidth = 2.5) +
+        scale_alpha_manual(values = c(0.25, 0.25),
+                           labels = c("Maximum", "Minimum"))
+      
+      plot_4B <- plot_4B +
+        geom_smooth(aes(x = Year, y = Monthly_anomaly_T_range),
+                    col = 'black',
+                    method = 'lm',
+                    linetype = 3,
+                    linewidth = 2.5,
+                    alpha = 1) +
+        scale_alpha_manual(values = c(0.25),
+                           labels = c("Monthly Temperature Range Anomaly"))
+      
+        
+    }
     
     ##returning plots
     

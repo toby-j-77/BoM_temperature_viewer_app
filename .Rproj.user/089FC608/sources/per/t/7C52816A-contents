@@ -112,14 +112,14 @@ information_table <- data.frame(
 
 
 
-names(information_table) <- c(
-  "Station_number",
-  "Start_date",
-  "End_date",
-  "No_of_days",
-  "Days_with_data",
-  "Data_percent"
-)
+# names(information_table) <- c(
+#   "Station_number",
+#   "Start_date",
+#   "End_date",
+#   "No_of_days",
+#   "Days_with_data",
+#   "Data_percent"
+# )
 
 information_table <- information_table |>
   mutate(data_percent = round(100*(days_with_data/no_of_days), digits = 2))
@@ -147,12 +147,12 @@ timeseries_plot <- ggplot(
       values_to = "Temp"
     )
 ) +
-  geom_line(aes(x = Date, y = Temp, col = Min_or_max),
-            alpha = 1) +
+  geom_line(aes(x = Date, y = Temp, col = Min_or_max, alpha = Min_or_max)) +
   labs(x = "Date", y = "Temperature (\u00b0C)", col = "Min/Max") +
   theme_bw() +
   scale_colour_manual(values = c("red", "blue"),
-                      labels = c("Maximum", "Minimum"))
+                      labels = c("Maximum", "Minimum")) +
+  scale_alpha_manual(values = c(1, 1))
 
 
 # coord_cartesian(xlim = c(as_date("1950-01-01"), as_date("2000-12-31")))
@@ -371,20 +371,7 @@ If we can add trendlines to existing charts, it will be easier than to recreatin
 
 timeseries_plot +
   geom_smooth(aes(x = Date, y = Temp, col = Min_or_max),
-              method = 'lm') +
-  scale_alpha_manual(values = c(0.5,0.5))
-```
-
-## 2.? Timeseries of temperature range
-
-```{r}
-#timeseries of temperature range
-
-temperature_range_plot <- ggplot(Sydney_temp) +
-  geom_line(aes(x = Date, y = T_range)) +
-  labs(x = "Date",
-       y = "Temperature range (\u00b0C)") +
-  theme_bw()
-
-temperature_range_plot
+              method = 'lm',
+              linetype = 3) +
+  scale_alpha_manual(values = c(0.25, 0.25))
 ```
