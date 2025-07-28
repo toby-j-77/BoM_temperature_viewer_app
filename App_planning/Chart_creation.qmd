@@ -375,3 +375,5 @@ timeseries_plot +
               linetype = 3) +
   scale_alpha_manual(values = c(0.25, 0.25))
 ```
+
+Using the principle of changing the alpha when adding a trendline, the trendlines fo the other plots were added in the code.

@@ -128,6 +128,8 @@ timeseries_plot_MA <- ggplot(BH_temp_MA) +
 
 timeseries_plot_MA
 
+?na.approx
+
 #code
 
 #testing

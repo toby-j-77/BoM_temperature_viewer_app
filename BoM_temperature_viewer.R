@@ -23,21 +23,40 @@ UI <- fluidPage(
      (iNaturalist user: toby_j_77,
      GitHub: toby-j-77)"),
   
+  p(
+  "To use this app, download temperature data from http://www.bom.gov.au/climate/data/
+  Select your desired station from the website and select any year when requesting data. Once you have requested
+  data, you will be taken to a new page. Ensure you download all of the data for that station, and not just the
+  the data for the year you selected. Also ensure you download daily minimum and maximum temperatures.
+  Unzip the downloaded files and upload the .csv file for the minimum and maximum temperature datasets in their 
+  corresponding places. Use the buttons provided to customise your plots. To save your plots, press the download
+  button and save your plots as zip folder containing .png files."
+  ),
+  
   fileInput(
     inputId = "BoM_min",
-    label = "Upload minimum temperature dataset",
+    label = strong("Upload Minimum Temperature Dataset"),
     accept = ".csv"
   ),
   
   fileInput(
     inputId = "BoM_max",
-    label = "Upload maximum temperature dataset",
+    label = strong("Upload Maximum Temperature Dataset"),
     accept = ".csv"
+  ),
+  
+  radioButtons(
+    inputId = "graph_type",
+    label = strong("What to Display?"),
+    choices = list(
+      "Minimum and Maximum Temperatures" = 0,
+      "Temperature Ranges" = 1
+    )
   ),
   
   selectInput(
     inputId = "RA_input",
-    label = "Running Average? (For Complete Timeseries)",
+    label = strong("Running Average? (For Complete Timeseries)"),
     choices = list("None" = "None", 
                    "7 days" = 7, 
                    "31 days" = 31, 
@@ -45,17 +64,8 @@ UI <- fluidPage(
   ),
   
   radioButtons(
-    inputId = "graph_type",
-    label = "What to Display?",
-    choices = list(
-      "Minimum and Maximum Temperatures" = 0,
-      "Temperature Ranges" = 1
-    )
-  ),
-  
-  radioButtons(
     inputId = "trend",
-    label = "Display Linear Trendline?",
+    label = strong("Display Linear Trendline? (Overwrites Running Average For Complete Timeseries)"),
     choices = list(
       "No" = 0,
       "Yes" = 1
@@ -64,7 +74,7 @@ UI <- fluidPage(
   
   downloadButton(
     outputId = "DOWNLOADS",
-    label= "Download Plots"),
+    label = "Download Plots"),
 
   # dateRangeInput(
   #   inputId = "date",
@@ -76,7 +86,7 @@ UI <- fluidPage(
   navset_pill(
     
     nav_panel(
-      title = "Data information",
+      title = "Data Information",
       tableOutput(outputId = "Information_table")
     ),
     
@@ -96,7 +106,7 @@ UI <- fluidPage(
     ),
     
     nav_panel(
-      title = "Monthly Anomalies By Month",
+      title = "Monthly Anomalies by Month",
       plotOutput(outputId = "Monthly_anomalies_facet")
     )
   ),
@@ -175,16 +185,16 @@ server <- function(input, output, session) {
         
         ##changing data structure
         
-        data_min <- data_min %>%
-          mutate(Quality_min_T = as_factor(Quality_min_T)) %>%
-          mutate(Date = paste(Year, Month, Day, sep = "-")) %>%
-          mutate(Date = as_date(Date)) %>%
+        data_min <- data_min |>
+          mutate(Quality_min_T = as_factor(Quality_min_T)) |>
+          mutate(Date = paste(Year, Month, Day, sep = "-")) |>
+          mutate(Date = as_date(Date)) |>
           mutate(Month = as.factor(Month))
         
-        data_max <- data_max %>%
-          mutate(Quality_max_T = as_factor(Quality_max_T)) %>%
-          mutate(Date = paste(Year, Month, Day, sep = "-")) %>%
-          mutate(Date = as_date(Date)) %>%
+        data_max <- data_max |>
+          mutate(Quality_max_T = as_factor(Quality_max_T)) |>
+          mutate(Date = paste(Year, Month, Day, sep = "-")) |>
+          mutate(Date = as_date(Date)) |>
           mutate(Month = as.factor(Month))
         
         ##binding data
@@ -193,7 +203,7 @@ server <- function(input, output, session) {
         
         ##removing extra columns
         
-        data_joined <- data_joined %>%
+        data_joined <- data_joined |>
           select(-ends_with(".y"))
         
         ##renaming columns
@@ -219,8 +229,8 @@ server <- function(input, output, session) {
         
         #calculating temperature range
         
-        data_joined <- data_joined %>%
-          mutate(T_range = Max_T - Min_T) %>%
+        data_joined <- data_joined |>
+          mutate(T_range = Max_T - Min_T) |>
           mutate(T_range_label = "Temperature_range")
         
         #creating information table
@@ -234,8 +244,8 @@ server <- function(input, output, session) {
         )
         
         information_table <- information_table |>
-          mutate(data_percent = round(100 * (days_with_data / no_of_days), digits = 2)) %>%
-          mutate(start_date = as.character(start_date)) %>%
+          mutate(data_percent = round(100 * (days_with_data / no_of_days), digits = 2)) |>
+          mutate(start_date = as.character(start_date)) |>
           mutate(end_date = as.character(end_date))
         
         names(information_table) <- c(
@@ -289,8 +299,8 @@ server <- function(input, output, session) {
       #creating temperature plot with no running average
       
       plot_1A <- ggplot(
-        data_joined %>%
-          select(Min_T, Max_T, Date) %>%
+        data_joined |>
+          select(Min_T, Max_T, Date) |>
           pivot_longer(
             cols = c(Min_T, Max_T),
             names_to = "Min_or_max",
@@ -382,34 +392,34 @@ server <- function(input, output, session) {
     else{
       #adding running average into the data
       
-      data_joined_RA <- data_joined %>%
+      data_joined_RA <- data_joined |>
         mutate(RA_min_T = split_fill(
           Min_T,
           na_length = as.integer(RA_selection),
           ra_length = as.integer(RA_selection)
-        )) %>%
+        )) |>
         mutate(RA_max_T = split_fill(
           Max_T,
           na_length = as.integer(RA_selection),
           ra_length = as.integer(RA_selection)
-        )) %>%
+        )) |>
         mutate(RA_T_range = split_fill(
           T_range,
           na_length = as.integer(RA_selection),
           ra_length = as.integer(RA_selection)
-        )) %>%
+        )) |>
         select(Min_T,
                Max_T,
                RA_min_T,
                RA_max_T,
                T_range,
                RA_T_range,
-               Date) %>%
+               Date) |>
         pivot_longer(
           cols = c(Min_T, Max_T, RA_min_T, RA_max_T),
           names_to = "Min_or_max",
           values_to = "Temp"
-        ) %>%
+        ) |>
         pivot_longer(
           cols = c(T_range, RA_T_range),
           names_to = "T_range_data",
@@ -529,20 +539,20 @@ server <- function(input, output, session) {
     
     #calculating monthly means and monthly mean anomalies
     
-    monthly_data <- data_joined  %>%
-      group_by(Month) %>%
-      mutate(Monthly_mean_min_T = mean(Min_T, na.rm = TRUE)) %>%
-      mutate(Monthly_mean_max_T = mean(Max_T, na.rm = TRUE)) %>%
-      mutate(Monthly_mean_T_range = mean(T_range, na.rm = TRUE)) %>%
-      ungroup() %>%
-      group_by(Year, Month) %>%
+    monthly_data <- data_joined  |>
+      group_by(Month) |>
+      mutate(Monthly_mean_min_T = mean(Min_T, na.rm = TRUE)) |>
+      mutate(Monthly_mean_max_T = mean(Max_T, na.rm = TRUE)) |>
+      mutate(Monthly_mean_T_range = mean(T_range, na.rm = TRUE)) |>
+      ungroup() |>
+      group_by(Year, Month) |>
       mutate(Monthly_anomaly_min_T = mean(Min_T, na.rm = TRUE) -
-               Monthly_mean_min_T) %>%
+               Monthly_mean_min_T) |>
       mutate(Monthly_anomaly_max_T = mean(Max_T, na.rm = TRUE) -
-               Monthly_mean_max_T) %>%
+               Monthly_mean_max_T) |>
       mutate(Monthly_anomaly_T_range = mean(T_range, na.rm = TRUE) -
-               Monthly_mean_T_range) %>%
-      ungroup() %>%
+               Monthly_mean_T_range) |>
+      ungroup() |>
       mutate(Month_middle = month_middle(Date))
     
     #creating plots
@@ -550,12 +560,12 @@ server <- function(input, output, session) {
     ##monthly mean temperatures
     
     plot_2A <- ggplot(
-      monthly_data %>%
-        group_by(Month, Monthly_mean_min_T, Monthly_mean_max_T) %>%
+      monthly_data |>
+        group_by(Month, Monthly_mean_min_T, Monthly_mean_max_T) |>
         summarise(
           Monthly_mean_min_T = mean(Monthly_mean_min_T),
           Monthly_mean_max_T = mean(Monthly_mean_max_T)
-        ) %>%
+        ) |>
         pivot_longer(
           cols = c(Monthly_mean_min_T, Monthly_mean_max_T),
           names_to = "Min_or_max",
@@ -579,8 +589,8 @@ server <- function(input, output, session) {
     ##monthly mean temperature ranges
     
     plot_2B <- ggplot(
-      monthly_data %>%
-        group_by(Month, Monthly_mean_T_range) %>%
+      monthly_data |>
+        group_by(Month, Monthly_mean_T_range) |>
         summarise(Monthly_mean_T_range = mean(Monthly_mean_T_range))
     ) +
       geom_col(
@@ -599,12 +609,12 @@ server <- function(input, output, session) {
     ##monthly min max temperature anomalies
     
     plot_3A <- ggplot(
-      monthly_data %>%
+      monthly_data |>
         distinct(
           Month_middle,
           Monthly_anomaly_min_T,
           Monthly_anomaly_max_T
-        ) %>%
+        ) |>
         pivot_longer(
           cols = c(Monthly_anomaly_min_T, Monthly_anomaly_max_T),
           names_to = "Min_or_max",
@@ -642,8 +652,8 @@ server <- function(input, output, session) {
     ##monthly temperature range anomalies
     
     plot_3B <- ggplot(
-      monthly_data %>%
-        distinct(Month_middle, Monthly_anomaly_T_range) %>%
+      monthly_data |>
+        distinct(Month_middle, Monthly_anomaly_T_range) |>
         mutate(T_range_label = "Temperature")
     ) +
       geom_line(
@@ -680,8 +690,8 @@ server <- function(input, output, session) {
     ##monthly min max temperature anomaly matrix
     
     plot_4A <- ggplot(
-      monthly_data %>%
-        distinct(Monthly_anomaly_min_T, Monthly_anomaly_max_T, Year, Month) %>%
+      monthly_data |>
+        distinct(Monthly_anomaly_min_T, Monthly_anomaly_max_T, Year, Month) |>
         pivot_longer(
           cols = c(Monthly_anomaly_min_T, Monthly_anomaly_max_T),
           names_to = "Min_or_max",
@@ -719,8 +729,8 @@ server <- function(input, output, session) {
     ##monthly temperature range anomaly matrix
     
     plot_4B <- ggplot(
-      monthly_data %>%
-        distinct(Monthly_anomaly_T_range, Year, Month) %>%
+      monthly_data |>
+        distinct(Monthly_anomaly_T_range, Year, Month) |>
         mutate(T_range_label = "Temperature")
     ) +
       geom_line(
