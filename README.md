@@ -1,7 +1,7 @@
 README
 ================
 Toby Jin
-2025-07-28
+2025-07-31
 
 # BoM Temperature Viewer
 
@@ -94,10 +94,12 @@ This input has 2 options:
   here is defined as the maximum temperature minus the minimum
   temperature for each day.
 
-### Running Average? (For Complete Timeseries)
+### Running Average?
 
 This input has 4 options, and they affect the plot **Temperature
-Timeseries** only:
+Timeseries** only (note, if a running average is chosen, then no
+trendline will be displayed for **Temperature Timeseries** when the
+option **Yes** is selected for **Display Linear Trendline?**):
 
 - **None**: No running average is applied and the raw data is displayed.
 
@@ -119,7 +121,9 @@ the running average length, missing values are linearly interpolated.
 (For more information on how this works, refer to the document
 **split_fill_function.qmd** under the **App_planning** folder.)
 
-### Display Linear Trendline? (Overwrites Running Average For Complete Timeseries)
+This
+
+### Display Linear Trendline?
 
 This input has 2 options, and affects **all plots except Mean Monthly
 Temperatures**. There are 2 options:
@@ -130,8 +134,8 @@ Temperatures**. There are 2 options:
 
 - **Yes**: A linear trend is calculated for each of the affected plots,
   and a least squares regression line is plotted over the data. For
-  **Temperature Timeseries**, this will remove any running average being
-  displayed if the running average option is not set to none.
+  **Temperature Timeseries**, no trendline will be displayed if the
+  option for **Running Average?** Is set to a value other than **None**.
 
 ## Plots
 
@@ -214,10 +218,9 @@ plots shown by the user will be downloaded.
 This app provides a quick and easy way to plot and visualise BoM data,
 but does clean or perform any analysis on the data apart from running a
 simple linear regression if the options **Yes** is selected for the
-option **Display Linear Trendline? (Overwrites Running Average For
-Complete Timeseries).** The plots generated in this app are user
-friendly and can be used in a wide range of scenarios from teaching to
-exploring temperature patterns in a desired region.
+option **Display Linear Trendline?.** The plots generated in this app
+are user friendly and can be used in a wide range of scenarios from
+teaching to exploring temperature patterns in a desired region.
 
 ## Creating the app
 
@@ -280,5 +283,6 @@ the creation of this app.
 
 I would like to acknowledge Associate Professor Alex Sen Gupta (UNSW)
 for providing feedback on what features and improvements should be made
-to the app. I would also like to acknowledge Dr Ben Walker for assisting
-in troubleshooting the download button for this web app.
+to the app. I would also like to acknowledge Dr Ben Walker (UNSW) for
+assisting in troubleshooting the download button for this web app during
+the UNSW CodeRs help session on 24/07/2025.

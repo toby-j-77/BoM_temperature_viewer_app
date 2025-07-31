@@ -56,7 +56,7 @@ UI <- fluidPage(
   
   selectInput(
     inputId = "RA_input",
-    label = strong("Running Average? (For Complete Timeseries)"),
+    label = strong("Running Average? (Overwrites Trendline For Temperature Timeseries)"),
     choices = list("None" = "None", 
                    "7 days" = 7, 
                    "31 days" = 31, 
@@ -65,7 +65,7 @@ UI <- fluidPage(
   
   radioButtons(
     inputId = "trend",
-    label = strong("Display Linear Trendline? (Overwrites Running Average For Complete Timeseries)"),
+    label = strong("Display Linear Trendline?"),
     choices = list(
       "No" = 0,
       "Yes" = 1

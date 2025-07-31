@@ -1,9 +1,9 @@
 ---
 title: "README"
 author: "Toby Jin"
-date: "2025-07-28"
+date: "2025-07-31"
 output: github_document
-embed-resources: true
+embed-resource: true
 ---
 
 # BoM Temperature Viewer
@@ -58,9 +58,9 @@ This input has 2 options:
 
 -   **Temperature Ranges:** This option allows users to create plots that show the temperature range on a certain day. The temperature range here is defined as the maximum temperature minus the minimum temperature for each day.
 
-### Running Average? (For Complete Timeseries)
+### Running Average? 
 
-This input has 4 options, and they affect the plot **Temperature Timeseries** only:
+This input has 4 options, and they affect the plot **Temperature Timeseries** only (note, if a running average is chosen, then no trendline will be displayed for **Temperature Timeseries** when the option **Yes** is selected for **Display Linear Trendline?**):
 
 -   **None**: No running average is applied and the raw data is displayed.
 
@@ -72,13 +72,15 @@ This input has 4 options, and they affect the plot **Temperature Timeseries** on
 
 When calculating running averages for datasets that contain large sections of no data, if the consecutive days with no data is equal to, or exceeds that of the running average length, then the running average will stop before the period of no data, and start again after the period of no data. If the number of consecutive days with no data is less than the running average length, missing values are linearly interpolated. (For more information on how this works, refer to the document **split_fill_function.qmd** under the **App_planning** folder.)
 
-### Display Linear Trendline? (Overwrites Running Average For Complete Timeseries)
+This
+
+### Display Linear Trendline? 
 
 This input has 2 options, and affects **all plots except Mean Monthly Temperatures**. There are 2 options:
 
 -   **No**: No trend is calculated for any plot, and the raw data is displayed (or the running average for **Temperature Timeseries** if the running average option is not set to none).
 
--   **Yes**: A linear trend is calculated for each of the affected plots, and a least squares regression line is plotted over the data. For **Temperature Timeseries**, this will remove any running average being displayed if the running average option is not set to none.
+-   **Yes**: A linear trend is calculated for each of the affected plots, and a least squares regression line is plotted over the data. For **Temperature Timeseries**, no trendline will be displayed if the option for **Running Average?** Is set to a value other than **None**.
 
 ## Plots
 
@@ -114,7 +116,7 @@ Once the user generates their desired plots, they are able to download plots usi
 
 ## Suggested Usage
 
-This app provides a quick and easy way to plot and visualise BoM data, but does clean or perform any analysis on the data apart from running a simple linear regression if the options **Yes** is selected for the option **Display Linear Trendline? (Overwrites Running Average For Complete Timeseries).** The plots generated in this app are user friendly and can be used in a wide range of scenarios from teaching to exploring temperature patterns in a desired region.
+This app provides a quick and easy way to plot and visualise BoM data, but does clean or perform any analysis on the data apart from running a simple linear regression if the options **Yes** is selected for the option **Display Linear Trendline?.** The plots generated in this app are user friendly and can be used in a wide range of scenarios from teaching to exploring temperature patterns in a desired region.
 
 ## Creating the app
 
@@ -146,4 +148,4 @@ The only instance where AI has been used is in the creation of the function spli
 
 ## Acknowledgements
 
-I would like to acknowledge Associate Professor Alex Sen Gupta (UNSW) for providing feedback on what features and improvements should be made to the app. I would also like to acknowledge Dr Ben Walker for assisting in troubleshooting the download button for this web app.
+I would like to acknowledge Associate Professor Alex Sen Gupta (UNSW) for providing feedback on what features and improvements should be made to the app. I would also like to acknowledge Dr Ben Walker (UNSW) for assisting in troubleshooting the download button for this web app during the UNSW CodeRs help session on 24/07/2025.

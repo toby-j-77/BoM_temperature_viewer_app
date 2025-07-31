@@ -9,7 +9,6 @@ editor: visual
 ```{r}
 #librarying packages
 
-
 library("tidyverse")
 library("forecast")
 library("rlist")
