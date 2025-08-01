@@ -216,11 +216,33 @@ plots shown by the user will be downloaded.
 ## Suggested Usage
 
 This app provides a quick and easy way to plot and visualise BoM data,
-but does clean or perform any analysis on the data apart from running a
-simple linear regression if the options **Yes** is selected for the
-option **Display Linear Trendline?.** The plots generated in this app
-are user friendly and can be used in a wide range of scenarios from
-teaching to exploring temperature patterns in a desired region.
+but does not clean or perform any analysis on the data. The plots
+generated in this app are user friendly and can be used in a wide range
+of scenarios from teaching to exploring temperature patterns in a
+desired region. Below are 3 examples on how the app can be used.
+
+### Example 1: Running average of Rottnest Island Temperatures
+
+This example shows how you can use this app to view an annual running
+average of minimum and maximum temperatures recorded by station 009193
+on Rottnest Island.
+
+![](images/Example_usage_1.png)
+
+### Example 2: Monthly Temperature Ranges at Broken Hill
+
+This example shows how this app can be used to investigate which month
+shows the highest mean daily difference between the minimum and maximum
+temperatures for station 047048 in Broken Hill.
+
+![](images/Example_usage_2.png)
+
+### Example 3: Monthly Temperature Trends
+
+This example shows how this app can be used to investigate how
+temperature trends differ between each month in station 066062 in Sydney
+
+![](images/Example_usage_3.png)
 
 ## Creating the app
 

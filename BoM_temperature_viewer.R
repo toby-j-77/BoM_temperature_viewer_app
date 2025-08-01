@@ -313,7 +313,7 @@ server <- function(input, output, session) {
           col = Min_or_max,
           alpha = Min_or_max
         )) +
-        labs(x = "Date", y = "Temperature (\u00b0C)", col = "Min/Max") +
+        labs(x = "Date", y = "Temperature (\u00b0C)", col = "Min/Max", alpha = "Min/Max") +
         ggtitle(
           paste0(
             "Minimum and Maximum Temperature Timeseries For Station ",
@@ -454,19 +454,19 @@ server <- function(input, output, session) {
         scale_colour_manual(
           values = c("red", "blue", "red", "blue"),
           labels = c(
-            "Running Average Maximum",
-            "Running Average Minimum",
             "Maximum",
-            "Minimum"
+            "Minimum",
+            "Running Average Maximum",
+            "Running Average Minimum"
           )
         ) +
         scale_alpha_manual(
           values = c(0.25, 0.25, 1, 1),
           labels = c(
-            "Running Average Maximum",
-            "Running Average Minimum",
             "Maximum",
-            "Minimum"
+            "Minimum",
+            "Running Average Maximum",
+            "Running Average Minimum"
           )
         )
       
