@@ -360,7 +360,8 @@ server <- function(input, output, session) {
             linetype = 1,
             linewidth = 1.25
           ) +
-          scale_alpha_manual(values = c(0.25, 0.25))
+          scale_alpha_manual(values = c(0.25, 0.25),
+                             labels = c("Maximum", "Minimum"))
         
         plot_1B <- plot_1B +
           geom_smooth(
