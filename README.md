@@ -103,8 +103,7 @@ This input has 2 options:
 ### Running Average?
 
 This input has 4 options, and they affect the plot **Temperature
-Timeseries** only (note, the **Display Linear Trendline** option
-overwrites the running average for **Temperature Timeseries**):
+Timeseries** only:
 
 - **None**: No running average is applied and the raw data is displayed.
 
@@ -126,6 +125,10 @@ the running average length, missing values are linearly interpolated.
 (For more information on how this works, refer to the document
 **split_fill_function.qmd** under the **App_planning** folder.)
 
+Note: If any option other than **None** is selected for the running
+average, then the linear trendline will not be displayed for the
+**Temperature Timeseries** plot.
+
 ### Display Linear Trendline?
 
 This input has 2 options, and affects **all plots except Mean Monthly
@@ -138,7 +141,7 @@ Temperatures**. There are 2 options:
 - **Yes**: A linear trend is calculated for each of the affected plots,
   and a least squares regression line is plotted over the data. For
   **Temperature Timeseries**, no trendline will be displayed if the
-  option for **Running Average?** Is set to a value other than **None**.
+  option for **Running Average** is set to a value other than **None**.
 
 ## Plots
 
@@ -311,3 +314,34 @@ for providing feedback on what features and improvements should be made
 to the app. I would also like to acknowledge Dr Ben Walker (UNSW) for
 assisting in troubleshooting the download button for this web app during
 the UNSW CodeRs help session on 24/07/2025.
+
+# References
+
+Bureau of Meteorology (2025) Climate Data Online - Map search. Available
+at: <http://www.bom.gov.au/climate/data/>  (Accessed: 7 July 2025).
+
+Chang, W. et al. (2025) ‘shiny: Web Application Framework for R’.
+Available at: <https://cran.r-project.org/web/packages/shiny/index.html>
+ (Accessed: 7 July 2025).
+
+Csárdi, G. et al. (2025) ‘zip: Cross-Platform “zip” Compression’.
+Available at: <https://cran.r-project.org/web/packages/zip/index.html>
+ (Accessed: 7 July 2025).
+
+Hyndman  \[aut, R. et al. (2025) ‘forecast: Forecasting Functions for
+Time Series and Linear Models’. Available at:
+<https://cran.r-project.org/web/packages/forecast/index.html>
+ (Accessed: 7 July 2025).
+
+Neuwirth, E. (2022) ‘RColorBrewer: ColorBrewer Palettes’. Available at:
+<https://cran.r-project.org/web/packages/RColorBrewer/index.html>
+ (Accessed: 7 April 2025).
+
+Sievert, C. et al. (2025) ‘bslib: Custom “Bootstrap” “Sass” Themes for
+“shiny” and “rmarkdown”’. Available at:
+<https://cran.r-project.org/web/packages/bslib/index.html>  (Accessed: 7
+July 2025).
+
+Wickham, H. et al. (2019) ‘Welcome to the Tidyverse’, Journal of Open
+Source Software, 4(43), p. 1686. Available at:
+<https://doi.org/10.21105/joss.01686>.  (Accessed: 7 July 2025).
