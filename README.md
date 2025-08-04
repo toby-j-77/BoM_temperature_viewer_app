@@ -1,7 +1,7 @@
 README
 ================
 Toby Jin
-2025-07-31
+2025-08-04
 
 # BoM Temperature Viewer
 
@@ -31,17 +31,23 @@ only under this assumption).
 
 ## Using the app
 
-As of currently, this app is not online and in order to use this app,
-you must download the files **BoM_temperature_viewer.R**, and the folder
-**R** along with its contents. Within the folder **Input_data**, there
-are datasets that have been pre-downloaded and available to use.
+As of currently, this app is not online. To use this app, it is
+recommended that this repository is cloned or downloaded to a local
+device. Set the working directory of the R session to this repository on
+the local device, and run the file **BoM_temperature_viewer.R**. Within
+the folder **Input_data**, there are datasets that have been
+pre-downloaded and available to use.
+
+If the app does not run correctly, ensure that the correct version of R
+is installed, and all of the packages required to run the app are
+installed (refer to the section **Required R Version and R Packages**).
 
 ## How to Download and Input BoM data
 
-In order for the app to work, the user must input BoM data. In order to
-download the correct data to input into this app, users must do the
-following steps twice, one for downloading the minimum temperatures
-dataset and one for downloading the maximum temperature dataset.
+In order for the app to work, the user must input BoM data. To download
+the correct data to input into this app, users must do the following
+steps twice, one for downloading the minimum temperatures dataset and
+one for downloading the maximum temperature dataset.
 
 ### Step 1: Accessing Data
 
@@ -97,9 +103,8 @@ This input has 2 options:
 ### Running Average?
 
 This input has 4 options, and they affect the plot **Temperature
-Timeseries** only (note, if a running average is chosen, then no
-trendline will be displayed for **Temperature Timeseries** when the
-option **Yes** is selected for **Display Linear Trendline?**):
+Timeseries** only (note, the **Display Linear Trendline** option
+overwrites the running average for **Temperature Timeseries**):
 
 - **None**: No running average is applied and the raw data is displayed.
 
@@ -120,8 +125,6 @@ of no data. If the number of consecutive days with no data is less than
 the running average length, missing values are linearly interpolated.
 (For more information on how this works, refer to the document
 **split_fill_function.qmd** under the **App_planning** folder.)
-
-This
 
 ### Display Linear Trendline?
 
@@ -229,7 +232,7 @@ on Rottnest Island.
 
 ![](images/Example_usage_1.png)
 
-### Example 2: Monthly Temperature Ranges at Broken Hill
+### Example 2: Temperature Ranges at Broken Hill
 
 This example shows how this app can be used to investigate which month
 shows the highest mean daily difference between the minimum and maximum
@@ -237,7 +240,7 @@ temperatures for station 047048 in Broken Hill.
 
 ![](images/Example_usage_2.png)
 
-### Example 3: Monthly Temperature Trends
+### Example 3: Monthly Temperature Trends in Sydney
 
 This example shows how this app can be used to investigate how
 temperature trends differ between each month in station 066062 in Sydney

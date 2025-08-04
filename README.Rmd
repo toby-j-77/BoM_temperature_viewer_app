@@ -1,7 +1,7 @@
 ---
 title: "README"
 author: "Toby Jin"
-date: "2025-07-31"
+date: "2025-08-04"
 output: github_document
 embed-resource: true
 ---
@@ -20,7 +20,9 @@ Once the correct files are uploaded, information about the data will be displaye
 
 ## Using the app
 
-As of currently, this app is not online and in order to use this app, you must download the files **BoM_temperature_viewer.R**, and the folder **R** along with its contents. Within the folder **Input_data**, there are datasets that have been pre-downloaded and available to use.
+As of currently, this app is not online. To use this app, it is recommended that this repository is cloned or downloaded to a local device. Set the working directory of the R session to this repository on the local device, and run the file **BoM_temperature_viewer.R**. Within the folder **Input_data**, there are datasets that have been pre-downloaded and available to use.
+
+If the app does not run correctly, ensure that the correct version of R is installed, and all of the packages required to run the app are installed (refer to the section **Required R Version and R Packages**).
 
 ## How to Download and Input BoM data
 
@@ -60,7 +62,7 @@ This input has 2 options:
 
 ### Running Average?
 
-This input has 4 options, and they affect the plot **Temperature Timeseries** only (note, if a running average is chosen, then no trendline will be displayed for **Temperature Timeseries** when the option **Yes** is selected for **Display Linear Trendline?**):
+This input has 4 options, and they affect the plot **Temperature Timeseries** only (note, the **Display Linear Trendline** option overwrites the running average for **Temperature Timeseries**):
 
 -   **None**: No running average is applied and the raw data is displayed.
 
@@ -71,8 +73,6 @@ This input has 4 options, and they affect the plot **Temperature Timeseries** on
 -   **365 days:** A 365 day running average is applied to the data and overlaid on the raw data.
 
 When calculating running averages for datasets that contain large sections of no data, if the consecutive days with no data is equal to, or exceeds that of the running average length, then the running average will stop before the period of no data, and start again after the period of no data. If the number of consecutive days with no data is less than the running average length, missing values are linearly interpolated. (For more information on how this works, refer to the document **split_fill_function.qmd** under the **App_planning** folder.)
-
-This
 
 ### Display Linear Trendline?
 
